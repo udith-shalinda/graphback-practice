@@ -1,0 +1,6 @@
+{
+    "env":{
+        "MONGODB_USER":"max",
+        "MONGODB_PASSWORD":"ODjmkgYPiqNhMgTk"
+    }
+}
