@@ -4,11 +4,13 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser')
 const path = require("path");
 const graphqlHttp = require('express-graphql')
-const {buildSchema} = require('graphql')
 
 //model
 const Event = require('./model/Event');
 const User = require('./model/User')
+
+const graphSchema = require('./graphql/schema/index');
+const resolvers = require('./graphql/resolvers/index');
 
 // const userRoutes = require("./routes/user");
 
@@ -47,84 +49,8 @@ app.use((req,res,next)=>{
 
 
 app.use("/graphql",graphqlHttp({
-    schema:buildSchema(`
-        type Event{
-            _id:ID!
-            title:String!
-            price:Float!
-            date:String!
-        }
-        type User{
-            _id:ID!
-            email:String!
-            password:String
-        }
-        input EventInput{
-            title:String!
-            price:Float!
-            date:String!
-        }
-        input UserInput{
-            email:String!
-            password:String!
-        }
-
-        type RootQuery{
-            events:[Event!]!
-        }
-        type RootMutaion{
-            createEvent(eventInput:EventInput):Event
-            createUser(userInput:UserInput):User
-        }
-
-        schema {
-            query:RootQuery
-            mutation:RootMutaion
-        }
-    `),
-    rootValue:{
-        events:()=>{
-            return Event.find()
-            .then(events=>{
-                return events.map(event=>{
-                    // console.log(event);
-                    return {
-                        ...event._doc,
-                        _id:event._doc._id.toString(),
-                    };
-                })
-            }).catch(err=>{
-                console.log(err);
-                throw err;
-            });
-        },
-        createEvent:(args)=>{
-            const eve = new Event({
-                title:args.eventInput.title,
-                price:args.eventInput.price,
-                date :args.eventInput.date
-            })
-            return eve.save().then(result=>{
-                console.log(result);
-                return {...result._doc};
-            }).catch(err=>{
-                console.log(err);
-                throw err;
-            });
-        }
-    },
-    createUser:(args)=>{
-        const user = new User({
-            email:args.userInput.email,
-            password:args.userInput.password,
-        });
-        return user.save().then(result=>{
-            return {...result._doc};
-        }).catch(err=>{
-            console.log(err);
-            throw err;s
-        })
-    },
+    schema:graphSchema,
+    rootValue:resolvers,
     graphiql:true
 }));
 
